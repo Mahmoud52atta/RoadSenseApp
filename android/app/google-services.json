@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "416048377225",
+    "project_id": "test-grad-project",
+    "storage_bucket": "test-grad-project.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:416048377225:android:7f24a1eac903a9408d4558",
+        "android_client_info": {
+          "package_name": "com.example.crowd_drive_test"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBE6vFOa_8SE_NuEmkJPRmY61fv0iUENpI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:416048377225:android:298bff098bad02488d4558",
+        "android_client_info": {
+          "package_name": "com.example.road_sense_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBE6vFOa_8SE_NuEmkJPRmY61fv0iUENpI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
