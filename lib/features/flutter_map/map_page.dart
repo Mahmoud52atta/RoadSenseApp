@@ -37,7 +37,7 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-    // _initLocationAndRoute();
+    _initLocationAndRoute();
   }
 
   @override
@@ -46,41 +46,41 @@ class _MapPageState extends State<MapPage> {
     super.dispose();
   }
 
-  // Future<void> _initLocationAndRoute() async {
-  //   setState(() {
-  //     _loading = true;
-  //     _error = null;
-  //   });
+  Future<void> _initLocationAndRoute() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
-  //   try {
-  //     final pos = await _locationService.getCurrentPosition();
-  //     _userLocation = LatLng(pos.latitude, pos.longitude);
+    try {
+      final pos = await _locationService.getCurrentPosition();
+      _userLocation = LatLng(pos.latitude, pos.longitude);
 
-  //     // center map to user location
-  //     _moveTo(_userLocation!, zoom: widget.initialZoom);
+      // center map to user location
+      _moveTo(_userLocation!, zoom: widget.initialZoom);
 
-  //     // subscribe to updates (optional)
-  //     _positionSub = _locationService
-  //         .getPositionStream(distanceFilterMeters: 15)
-  //         .listen((p) {
-  //           setState(() {
-  //             _userLocation = LatLng(p.latitude, p.longitude);
-  //           });
-  //         });
+      // subscribe to updates (optional)
+      _positionSub = _locationService
+          .getPositionStream(distanceFilterMeters: 15)
+          .listen((p) {
+            setState(() {
+              _userLocation = LatLng(p.latitude, p.longitude);
+            });
+          });
 
-  //     // fetch route
-  //     _routePoints = await _routingService.getRoute(
-  //       start: _userLocation!,
-  //       end: widget.destination,
-  //     );
-  //   } catch (e) {
-  //     _error = e.toString();
-  //   }
+      // fetch route
+      _routePoints = await _routingService.getRoute(
+        start: _userLocation!,
+        end: widget.destination,
+      );
+    } catch (e) {
+      _error = e.toString();
+    }
 
-  //   setState(() {
-  //     _loading = false;
-  //   });
-  // }
+    setState(() {
+      _loading = false;
+    });
+  }
 
   void _moveTo(LatLng target, {double? zoom}) {
     // A small helper that moves the map smoothly.
@@ -122,16 +122,16 @@ class _MapPageState extends State<MapPage> {
               ),
 
               // route polyline layer
-              // if (_routePoints.isNotEmpty)
-              //   PolylineLayer(
-              //     polylines: [
-              //       Polyline(
-              //         points: _routePoints,
-              //         color: Theme.of(context).colorScheme.primary,
-              //         strokeWidth: 5.0,
-              //       )
-              //     ],
-              //   ),
+              if (_routePoints.isNotEmpty)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: _routePoints,
+                      color: Theme.of(context).colorScheme.primary,
+                      strokeWidth: 5.0,
+                    ),
+                  ],
+                ),
 
               // markers
               MarkerLayer(
