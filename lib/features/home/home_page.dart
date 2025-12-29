@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'dart:async';
 import 'package:road_sense_app/core/extensions/context_extension.dart';
+import 'package:road_sense_app/features/home/widget/location_service.dart';
 
 import '../../config/app_config.dart';
 import '../../core/app_storage.dart';
@@ -21,13 +22,17 @@ class _HomePageState extends State<HomePage> {
   List<Marker> myMarkers = [];
   StreamSubscription<LocationData>? _locationSubscription;
 
+  late LocationService _locationService;
+
   @override
   void initState() {
     super.initState();
     debugPrint('[HomePage] initState - Initializing map and location');
     _mapController = MapController();
     location = Location();
-    _initializeLocation();
+    _locationService = LocationService();
+    // _initializeLocation();
+    _updateLocation();
   }
 
   @override
@@ -47,17 +52,6 @@ class _HomePageState extends State<HomePage> {
     }
 
     super.dispose();
-  }
-
-  Future<void> _initializeLocation() async {
-    debugPrint(
-      '[HomePage] _initializeLocation - Starting location initialization',
-    );
-    try {
-      await _updateLocation();
-    } catch (e) {
-      debugPrint('[HomePage] _initializeLocation - Fatal error: $e');
-    }
   }
 
   @override
@@ -152,94 +146,52 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _checkLocationService() async {
-    debugPrint('[Location] Checking location service status');
-    try {
-      var isServiceEnabled = await location.serviceEnabled();
-
-      if (!isServiceEnabled) {
-        debugPrint('[Location] Location service disabled, requesting...');
-        isServiceEnabled = await location.requestService();
-
-        if (!isServiceEnabled) {
-          debugPrint('[Location] User declined to enable location service');
-          return;
-        }
-      }
-
-      debugPrint('[Location] Location service is enabled');
-    } catch (e) {
-      debugPrint('[Location] Error checking location service: $e');
-    }
-  }
-
-  Future<bool> _checkLocationPermission() async {
-    debugPrint('[Location] Checking location permission');
-    try {
-      var permissionStatus = await location.hasPermission();
-      debugPrint('[Location] Current permission status: $permissionStatus');
-
-      if (permissionStatus == PermissionStatus.denied) {
-        debugPrint('[Location] Permission denied, requesting...');
-        permissionStatus = await location.requestPermission();
-
-        if (permissionStatus != PermissionStatus.granted) {
-          debugPrint('[Location] User denied location permission');
-          return false;
-        }
-      }
-
-      if (permissionStatus == PermissionStatus.deniedForever) {
-        debugPrint('[Location] Location permission denied forever');
-        return false;
-      }
-
-      debugPrint('[Location] Location permission granted');
-      return permissionStatus == PermissionStatus.granted;
-    } catch (e) {
-      debugPrint('[Location] Error checking location permission: $e');
-      return false;
-    }
-  }
-
   Future<void> _startLocationTracking() async {
     debugPrint('[Location] Starting location tracking');
-    try {
-      // Fetch initial location
-      final currentLocation = await location.getLocation();
 
-      if (!mounted) {
-        debugPrint('[Location] Widget disposed before location received');
-        return;
-      }
+    _locationService.getCurrentLocation((LocationData currentLocation) {
+      try {
+        if (!mounted) {
+          debugPrint('[Map] Widget disposed, skipping location update');
+          return;
+        }
 
-      if (currentLocation.latitude != null &&
-          currentLocation.longitude != null) {
-        await _updateMapLocation(
-          currentLocation.latitude!,
-          currentLocation.longitude!,
-          isInitial: true,
+        _mapController.move(
+          LatLng(currentLocation.latitude!, currentLocation.longitude!),
+          15,
         );
-      }
 
-      // Cancel previous subscription
-      await _locationSubscription?.cancel();
-      location.changeSettings(
-        distanceFilter: 2,
-      );
-      // Listen for location changes
-      _locationSubscription = location.onLocationChanged.listen((
-        LocationData updatedLocation,
-      ) {
-        _onLocationUpdated(updatedLocation);
-      }, onError: _onLocationStreamError);
-
-      debugPrint('[Location] Location tracking started');
-    } catch (e) {
-      if (mounted) {
-        debugPrint('[Location] Error starting location tracking: $e');
+        if (mounted) {
+          setState(() {
+            myMarkers = [
+              Marker(
+                width: 50,
+                height: 50,
+                point: LatLng(
+                  currentLocation.latitude!,
+                  currentLocation.longitude!,
+                ),
+                child: const Icon(
+                  Icons.location_on,
+                  size: 40,
+                  color: Colors.blue,
+                ),
+              ),
+            ];
+          });
+        }
+      } catch (e) {
+        debugPrint('[Map] Error updating location on map: $e');
       }
-    }
+    });
+
+    // Cancel previous subscription
+    await _locationSubscription?.cancel();
+    location.changeSettings(distanceFilter: 2);
+
+    _locationService.getRealTimeLocationUpdates((LocationData updatedLocation) {
+      _onLocationUpdated(updatedLocation);
+    });
   }
 
   void _onLocationUpdated(LocationData loc) {
@@ -282,65 +234,14 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _onLocationStreamError(dynamic error) {
-    if (!mounted) return;
-
-    // Ignore expected abort errors during disposal
-    if (error.toString().contains('abortTrigger') ||
-        error.toString().contains('Request aborted')) {
-      debugPrint('[Location] Expected abort error during disposal');
-      return;
-    }
-
-    debugPrint('[Location] Stream error: $error');
-  }
-
-  Future<void> _updateMapLocation(
-    double latitude,
-    double longitude, {
-    bool isInitial = false,
-  }) async {
-    try {
-      if (!mounted) {
-        debugPrint('[Map] Widget disposed, skipping location update');
-        return;
-      }
-
-      _mapController.move(LatLng(latitude, longitude), 15);
-
-      if (mounted) {
-        setState(() {
-          myMarkers = [
-            Marker(
-              width: 50,
-              height: 50,
-              point: LatLng(latitude, longitude),
-              child: const Icon(
-                Icons.location_on,
-                size: 40,
-                color: Colors.blue,
-              ),
-            ),
-          ];
-        });
-      }
-
-      final logType = isInitial ? 'initial' : 'updated';
-      debugPrint('[Map] Location $logType on map: ($latitude, $longitude)');
-    } catch (e) {
-      debugPrint('[Map] Error updating location on map: $e');
-    }
-  }
-
   Future<void> _updateLocation() async {
     debugPrint('[Location] Starting location update flow');
     try {
       // Check location service
-      await _checkLocationService();
+      await _locationService.checkLocationService();
 
       // Check permissions
-      final hasPermission = await _checkLocationPermission();
-
+      final hasPermission = await _locationService.checkLocationPermission();
       if (!hasPermission) {
         debugPrint('[Location] Cannot proceed - no permission granted');
         return;

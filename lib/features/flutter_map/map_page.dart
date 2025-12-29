@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'services/location_service.dart';
+import 'services/location_service2.dart';
 import 'services/routing_service.dart';
 import 'widgets/user_location_marker.dart';
 import 'widgets/destination_marker.dart';
@@ -24,7 +24,7 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
-  final LocationService _locationService = LocationService();
+  // final LocationService _locationService = LocationService();
   final RoutingService _routingService = RoutingService();
 
   LatLng? _userLocation;
@@ -37,7 +37,7 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-    _initLocationAndRoute();
+    // _initLocationAndRoute();
   }
 
   @override
@@ -46,42 +46,42 @@ class _MapPageState extends State<MapPage> {
     super.dispose();
   }
 
-  Future<void> _initLocationAndRoute() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  // Future<void> _initLocationAndRoute() async {
+  //   setState(() {
+  //     _loading = true;
+  //     _error = null;
+  //   });
 
-    try {
-      final pos = await _locationService.getCurrentPosition();
-      _userLocation = LatLng(pos.latitude, pos.longitude);
+  //   try {
+  //     // final pos = await _locationService.getCurrentPosition();
+  //     _userLocation = LatLng(pos.latitude, pos.longitude);
 
-      // center map to user location
-      _moveTo(_userLocation!, zoom: widget.initialZoom);
+  //     // center map to user location
+  //     _moveTo(_userLocation!, zoom: widget.initialZoom);
 
-      // subscribe to updates (optional)
-      _positionSub = _locationService
-          .getPositionStream(distanceFilterMeters: 15)
-          .listen((p) {
-            setState(() {
-              _userLocation = LatLng(p.latitude, p.longitude);
-            });
-          });
+  //     // subscribe to updates (optional)
+  //     // _positionSub = _locationService
+  //         .getPositionStream(distanceFilterMeters: 15)
+  //         .listen((p) {
+  //           setState(() {
+  //             _userLocation = LatLng(p.latitude, p.longitude);
+  //           });
+  //         });
 
-      // fetch route
-      _routePoints = await _routingService.getRoute(
-        start: _userLocation!,
-        end: widget.destination,
-      );
-    } catch (e) {
-      _error = e.toString();
-    }
+  //     // fetch route
+  //     _routePoints = await _routingService.getRoute(
+  //       start: _userLocation!,
+  //       end: widget.destination,
+  //     );
+  //   } catch (e) {
+  //     _error = e.toString();
+  //   }
 
-    setState(() {
-      _loading = false;
-    });
-  }
-
+  //   setState(() {
+  //     _loading = false;
+  //   });
+  // }
+  //
   void _moveTo(LatLng target, {double? zoom}) {
     // A small helper that moves the map smoothly.
     // Move the map to target (non-animated in this version of flutter_map).
